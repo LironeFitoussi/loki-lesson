@@ -1,0 +1,79 @@
+.section-slide {
+  background: var(--slide-bg);
+}
+
+.section-slide > .iitc-logo {
+  top: 5%;
+  left: 6%;
+  z-index: 2;
+}
+
+.section-slide__body {
+  position: absolute;
+  top: 30%;
+  left: 6%;
+  width: 55%;
+  z-index: 2;
+}
+
+.section-slide__title {
+  margin: 0;
+  font-size: clamp(28px, 5vw, 52px);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--brand-dark);
+  text-shadow: 2px 3px 6px rgba(0, 0, 0, 0.18);
+}
+
+.section-slide__intro {
+  margin: 1.2em 0 0;
+  font-size: clamp(14px, 1.6vw, 18px);
+  font-weight: 700;
+  color: var(--brand-accent);
+  letter-spacing: 0.02em;
+}
+
+.section-slide > .brand-footer {
+  position: absolute;
+  bottom: 6%;
+  left: 6%;
+  z-index: 2;
+}
+
+.section-slide__dark {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(78% 0%, 100% 0%, 100% 100%, 64% 100%);
+  background: var(--brand-dark);
+  overflow: hidden;
+}
+
+.section-slide__shapes {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.07) 0,
+    rgba(255, 255, 255, 0.07) 1px,
+    transparent 1px,
+    transparent 28px
+  );
+  mask-image: linear-gradient(to top, black, transparent 55%);
+}
+
+.section-slide__topic {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 4%;
+  width: 20%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.section-slide__topic .topic-logo img {
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}

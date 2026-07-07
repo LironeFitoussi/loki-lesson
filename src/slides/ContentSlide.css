@@ -1,0 +1,72 @@
+.content-slide {
+  background: var(--slide-bg);
+}
+
+.content-slide__pill {
+  position: absolute;
+  top: 6%;
+  left: 6%;
+  width: 76%;
+  box-sizing: border-box;
+  background: var(--brand-accent);
+  color: #fff;
+  font-weight: 800;
+  font-size: clamp(16px, 2.4vw, 26px);
+  padding: 0.6em 1.2em;
+  border-radius: 999px;
+  text-align: center;
+}
+
+.content-slide__body {
+  position: absolute;
+  top: 22%;
+  left: 6%;
+  width: 76%;
+  bottom: 14%;
+  overflow: auto;
+  font-size: clamp(14px, 1.8vw, 20px);
+  line-height: 1.6;
+  color: var(--brand-ink);
+}
+
+.content-slide__body ul {
+  margin: 0;
+  padding-inline-start: 1.2em;
+}
+
+.content-slide__body li {
+  margin-bottom: 0.6em;
+}
+
+.content-slide__body p {
+  margin: 0 0 0.8em;
+}
+
+.content-slide > .iitc-logo {
+  bottom: 4%;
+  left: 6%;
+}
+
+.content-slide > .brand-footer {
+  position: absolute;
+  bottom: 4%;
+  right: 14%;
+}
+
+.content-slide__sidebar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 10%;
+  background: var(--brand-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.content-slide__sidebar .topic-logo img {
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+  max-width: 70%;
+}
