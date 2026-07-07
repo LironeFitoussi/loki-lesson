@@ -42,7 +42,7 @@ export function BrandFooter({ author }: { author: DeckMeta["author"] }) {
 export function TopicLogoBadge({ src }: { src?: string }) {
   return (
     <div className="topic-logo">
-      <img src={src ?? "/brand/topic-logo.svg"} alt="" />
+      <img src={src ?? "/brand/topic-logo.png"} alt="" />
     </div>
   );
 }

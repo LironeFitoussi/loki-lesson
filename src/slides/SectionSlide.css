@@ -10,24 +10,26 @@
 
 .section-slide__body {
   position: absolute;
-  top: 30%;
-  left: 6%;
-  width: 55%;
+  top: 50%;
+  left: 34%;
+  width: 58%;
+  transform: translate(-50%, -50%);
   z-index: 2;
+  text-align: center;
 }
 
 .section-slide__title {
   margin: 0;
-  font-size: clamp(28px, 5vw, 52px);
+  font-size: clamp(46px, 7vw, 76px);
   font-weight: 800;
-  line-height: 1.1;
+  line-height: 1.05;
   color: var(--brand-dark);
   text-shadow: 2px 3px 6px rgba(0, 0, 0, 0.18);
 }
 
 .section-slide__intro {
-  margin: 1.2em 0 0;
-  font-size: clamp(14px, 1.6vw, 18px);
+  margin: 0.85em 0 0;
+  font-size: clamp(20px, 2.4vw, 30px);
   font-weight: 700;
   color: var(--brand-accent);
   letter-spacing: 0.02em;
@@ -71,6 +73,12 @@
   align-items: center;
   justify-content: center;
   z-index: 1;
+}
+
+.section-slide__topic .topic-logo {
+  width: min(100%, 220px);
+  aspect-ratio: 1;
+  height: auto;
 }
 
 .section-slide__topic .topic-logo img {

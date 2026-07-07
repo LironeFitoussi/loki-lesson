@@ -24,22 +24,88 @@
   width: 76%;
   bottom: 14%;
   overflow: auto;
-  font-size: clamp(14px, 1.8vw, 20px);
-  line-height: 1.6;
+  font-size: 32px;
+  line-height: 1.35;
   color: var(--brand-ink);
 }
 
-.content-slide__body ul {
+.content-slide__html {
+  display: flow-root;
+}
+
+.content-slide__html strong {
+  color: var(--brand-accent);
+  font-weight: 800;
+}
+
+.content-slide__html ul {
   margin: 0;
   padding-inline-start: 1.2em;
 }
 
-.content-slide__body li {
-  margin-bottom: 0.6em;
+.content-slide__html li {
+  margin-bottom: 0.35em;
 }
 
-.content-slide__body p {
-  margin: 0 0 0.8em;
+.content-slide__html p {
+  margin: 0 0 0.55em;
+}
+
+.content-slide__prompt {
+  display: inline-block;
+  margin-top: 0.25em;
+  padding: 0.22em 0.6em;
+  border-inline-start: 6px solid var(--brand-accent);
+  background: rgba(248, 130, 33, 0.12);
+  font-weight: 800;
+}
+
+.content-slide__terminal {
+  margin-top: 0.5em;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #111827;
+  color: #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
+  text-align: left;
+  direction: ltr;
+}
+
+.content-slide__terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 14px;
+  background: #1f2937;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.content-slide__terminal-bar span {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+
+.content-slide__terminal-bar span:nth-child(1) {
+  background: #f87171;
+}
+
+.content-slide__terminal-bar span:nth-child(2) {
+  background: #fbbf24;
+}
+
+.content-slide__terminal-bar span:nth-child(3) {
+  background: #34d399;
+}
+
+.content-slide__terminal-bar strong {
+  margin-left: 10px;
+  color: #cbd5e1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .content-slide > .iitc-logo {
@@ -65,8 +131,13 @@
   justify-content: center;
 }
 
+.content-slide__sidebar .topic-logo {
+  width: 70%;
+  aspect-ratio: 1;
+  height: auto;
+}
+
 .content-slide__sidebar .topic-logo img {
   filter: brightness(0) invert(1);
   opacity: 0.9;
-  max-width: 70%;
 }

@@ -22,8 +22,11 @@ export type SectionSlide = {
 export type ContentSlide = {
   type: 'content'
   title: string
-  bullets?: string[]
-  body?: string
+  html: string
+  code?: {
+    language: string
+    content: string
+  }
 }
 
 export type Slide = CoverSlide | SectionSlide | ContentSlide

@@ -1,22 +1,49 @@
+import { Light as SyntaxHighlighter } from 'react-syntax-highlighter'
 import type { ContentSlide as ContentSlideData, DeckMeta } from './types'
 import { resolveDir } from './rtl'
 import { SlideShell, IitcLogo, BrandFooter, TopicLogoBadge } from './SlideShell'
 import './ContentSlide.css'
 
+function textFromHtml(html: string) {
+  return html.replace(/<[^>]*>/g, ' ')
+}
+
 export function ContentSlide({ slide, meta }: { slide: ContentSlideData; meta: DeckMeta }) {
-  const dir = resolveDir(slide.title, slide.body, ...(slide.bullets ?? []))
+  const dir = resolveDir(slide.title, textFromHtml(slide.html))
   return (
     <SlideShell dir={dir} className="content-slide">
       <div className="content-slide__pill">{slide.title}</div>
       <div className="content-slide__body">
-        {slide.bullets && (
-          <ul>
-            {slide.bullets.map((bullet) => (
-              <li key={bullet}>{bullet}</li>
-            ))}
-          </ul>
+        <div className="content-slide__html" dangerouslySetInnerHTML={{ __html: slide.html }} />
+        {slide.code && (
+          <div className="content-slide__terminal" dir="ltr">
+            <div className="content-slide__terminal-bar" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <strong>application.log</strong>
+            </div>
+            <SyntaxHighlighter
+              language={slide.code.language}
+              customStyle={{
+                margin: 0,
+                padding: '16px 22px',
+                background: 'transparent',
+                fontSize: '22px',
+                lineHeight: 1.35,
+              }}
+              codeTagProps={{
+                style: {
+                  fontFamily:
+                    'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
+                },
+              }}
+              wrapLongLines
+            >
+              {slide.code.content}
+            </SyntaxHighlighter>
+          </div>
         )}
-        {slide.body && <p>{slide.body}</p>}
       </div>
       <IitcLogo />
       <BrandFooter author={meta.author} />
