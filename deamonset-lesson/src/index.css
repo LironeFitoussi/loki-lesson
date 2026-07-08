@@ -1,0 +1,27 @@
+:root {
+  /* Swap these to re-theme the whole deck — nothing else hardcodes a color. */
+  --brand-accent: #326ce5;
+  --brand-dark: #1f3a63;
+  --brand-cover-pill: #0b1e3a;
+  --brand-ink: #253248;
+  --slide-bg: #ffffff;
+  --heading-font: 'Rubik', system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  color-scheme: light;
+  font: 16px/1.5 var(--heading-font);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}

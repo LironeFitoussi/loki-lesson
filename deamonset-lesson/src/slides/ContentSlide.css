@@ -1,0 +1,140 @@
+.content-slide {
+  background: var(--slide-bg);
+}
+
+.content-slide__pill {
+  position: absolute;
+  top: 6%;
+  left: 6%;
+  width: 76%;
+  box-sizing: border-box;
+  background: var(--brand-accent);
+  color: #fff;
+  font-weight: 800;
+  font-size: clamp(14px, 1.9vw, 20px);
+  padding: 0.5em 1.2em;
+  border-radius: 999px;
+  text-align: center;
+}
+
+.content-slide__body {
+  position: absolute;
+  top: 20%;
+  left: 6%;
+  width: 76%;
+  bottom: 6%;
+  overflow: hidden;
+  font-size: clamp(14px, 1.7vw, 22px);
+  line-height: 1.25;
+  color: var(--brand-ink);
+}
+
+.content-slide__html {
+  display: flow-root;
+}
+
+.content-slide__html strong {
+  color: var(--brand-accent);
+  font-weight: 800;
+}
+
+.content-slide__html ul {
+  margin: 0;
+  padding-inline-start: 1.2em;
+}
+
+.content-slide__html li {
+  margin-bottom: 0.35em;
+}
+
+.content-slide__html p {
+  margin: 0 0 0.55em;
+}
+
+.content-slide__prompt {
+  display: inline-block;
+  margin-top: 0.25em;
+  padding: 0.22em 0.6em;
+  border-inline-start: 6px solid var(--brand-accent);
+  background: rgba(248, 130, 33, 0.12);
+  font-weight: 800;
+}
+
+.content-slide__terminal {
+  margin-top: 0.4em;
+  overflow: hidden;
+  max-width: 100%;
+  border-radius: 8px;
+  background: #111827;
+  color: #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
+  text-align: left;
+  direction: ltr;
+}
+
+.content-slide__terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 26px;
+  padding: 0 12px;
+  background: #1f2937;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.content-slide__terminal-bar span {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+
+.content-slide__terminal-bar span:nth-child(1) {
+  background: #f87171;
+}
+
+.content-slide__terminal-bar span:nth-child(2) {
+  background: #fbbf24;
+}
+
+.content-slide__terminal-bar span:nth-child(3) {
+  background: #34d399;
+}
+
+.content-slide__terminal-bar strong {
+  margin-left: 10px;
+  color: #cbd5e1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.content-slide > .iitc-logo {
+  bottom: 4%;
+  left: 6%;
+  height: 28px !important;
+}
+
+.content-slide > .brand-footer {
+  position: absolute;
+  bottom: 4%;
+  right: 14%;
+}
+
+.content-slide__sidebar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 10%;
+  background: var(--brand-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.content-slide__sidebar .topic-logo {
+  width: 70%;
+  aspect-ratio: 1;
+  height: auto;
+}
