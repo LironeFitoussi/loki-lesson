@@ -1,520 +1,217 @@
 import type { DeckMeta, Slide } from '../slides/types'
 
 export const meta: DeckMeta = {
-  title: 'Observability: Logs',
+  title: 'Kubernetes: DaemonSet',
   author: {
     name: 'Lirone Fitoussi',
     role: 'Full Stack | IT | DevOps | Automations',
     githubUrl: '#',
   },
+  topicLogoSrc: '/brand/topic-logo.svg',
 }
 
 export const slides: Slide[] = [
   {
     type: 'cover',
-    title: 'Observability: Logs',
+    title: 'Kubernetes: DaemonSet',
   },
 
   {
     type: 'section',
-    title: 'האפליקציה משאירה סימנים',
-    intro: 'לפני שמדברים על כלים, צריך להבין מה אנחנו מנסים לראות',
+    title: 'יש משימות שצריכות לרוץ בכל מקום',
+    intro: 'לפני שנכיר כלי חדש, צריך להבין איזו בעיה הוא בא לפתור',
   },
 
   {
     type: 'content',
-    title: 'מה קורה בתוך האפליקציה?',
-    html: `<p>אפליקציה לא רק מחזירה תשובות למשתמשים. בזמן שהיא רצה, היא מקבלת בקשות, קוראת למסד נתונים, מפעילה תהליכים, נכשלת לפעמים, וממשיכה הלאה. אם לא נשמור סימנים מהאירועים האלה, אחרי תקלה נישאר עם ניחושים.</p><ul><li>משתמש התחבר</li><li>הזמנה נוצרה</li><li>תשלום נכשל</li><li>מסד הנתונים החזיר timeout</li></ul><p class="content-slide__prompt">שאלת מעבר: איך האפליקציה משאירה את הסימנים האלה?</p>`,
+    title: 'מי מחליט איפה Pod ירוץ?',
+    html: `<p>ב-Kubernetes אנחנו לא בוחרים ידנית שרת לכל אפליקציה. אנחנו מגדירים מה צריך לרוץ, וה-<strong>Scheduler</strong> בוחר לכל Pod את ה-Node המתאים לפי משאבים פנויים ואילוצים. זה בדיוק הכוח של המערכת: היא מפזרת את העבודה בשבילנו.</p><ul><li>אנחנו מצהירים מה להריץ</li><li>ה-Scheduler בוחר איפה</li><li>המיקום יכול להשתנות לאורך הזמן</li></ul>`,
   },
 
   {
     type: 'content',
-    title: 'האפליקציה כותבת הודעות',
-    html: `<p>בנקודות חשובות בקוד, האפליקציה כותבת הודעות טקסט קצרות שמתארות מה קרה. הודעות כאלה עוזרות לנו לשחזר את הסיפור של המערכת אחרי שהאירועים כבר התרחשו. להודעות האלה אנחנו קוראים <strong>Logs</strong>.</p><ul><li>כל הודעה מתארת אירוע</li><li>ההודעות נשמרות לפי זמן</li><li>הן נכתבות בזמן אמת</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'איך נראה Log?',
-    html: `<p>Log טוב הוא לא סיפור ארוך. הוא שורה קצרה עם זמן, הקשר, ומה שקרה. כשיש הרבה שורות כאלה ברצף, אפשר להבין איך המשתמש או הבקשה עברו במערכת.</p>`,
+    title: 'לרוב האפליקציות לא אכפת איפה',
+    html: `<p>כשמריצים API או אתר עם Deployment, מבקשים מספר עותקים, ולא משנה על אילו Nodes הם נוחתים. משתמש שנכנס לאתר לא יודע ולא צריך לדעת איזה Node ענה לו. העיקר שיש מספיק עותקים.</p>`,
     code: {
-      language: 'text',
+      language: 'yaml',
       content:
-        '09:01 user=123 action=login status=success\n09:02 order=8842 action=create status=success\n09:03 payment=8842 status=failed reason=timeout',
+        'kind: Deployment\nspec:\n  replicas: 3   # שלושה עותקים, לא משנה איפה',
     },
   },
 
   {
     type: 'content',
-    title: 'למה כותבים Logs?',
-    html: `<p>כל עוד הכול עובד, כמעט לא מסתכלים על הלוגים. אבל ברגע שיש תקלה, הם הופכים לזיכרון של המערכת. במקום לשאול "אולי זה קרה?", אפשר לבדוק מה באמת נכתב בזמן האירוע.</p><ul><li>להבין מה קרה</li><li>לראות את סדר האירועים</li><li>לזהות נקודת כשל</li><li>להסביר תקלה בצורה מבוססת</li></ul><p class="content-slide__prompt">שאלת מעבר: אם האפליקציה כותבת Logs, איפה הם נשמרים?</p>`,
-  },
-
-  {
-    type: 'section',
-    title: 'איפה נשמרים הלוגים?',
-    intro: 'כדי לקרוא לוגים אחר כך, הם חייבים לצאת מהקוד למקום כלשהו',
+    title: 'אבל יש משימות שצמודות ל-Node',
+    html: `<p>חלק מהעבודה באשכול היא לא "שירות למשתמשים" אלא "שירות ל-Node עצמו". סוכן שאוסף את הלוגים של המכונה חייב לשבת על אותה מכונה. סוכן שמודד CPU של ה-Node לא יכול למדוד אותו מרחוק, מ-Node אחר.</p><ul><li>איסוף לוגים מ-<strong>/var/log</strong> של המכונה</li><li>מדידת CPU, RAM ודיסק של ה-Node</li><li>רכיבי רשת שכל Node חייב להריץ</li></ul><p class="content-slide__prompt">שאלת מעבר: אפשר לסדר את זה עם Deployment רגיל?</p>`,
   },
 
   {
     type: 'content',
-    title: 'לוגים צריכים יעד',
-    html: `<p>כאשר הקוד כותב Log, ההודעה לא נשארת בתוך הפונקציה. היא נשלחת החוצה למקום שממנו אפשר לקרוא אותה. במערכות פשוטות זה יכול להיות קובץ לוג, ובמערכות מודרניות רבות זו היציאה הסטנדרטית של התהליך: <strong>stdout</strong>.</p><ul><li>קובץ כמו <strong>app.log</strong></li><li>stdout של התהליך</li><li>כל הודעה מתווספת לפי זמן</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'קובץ Log הוא רצף',
-    html: `<p>בקובץ לוג, כל אירוע חדש מתווסף בסוף. המבנה הזה פשוט מאוד: קוראים מלמעלה למטה ורואים את הסיפור לפי הזמן. לכן קובץ לוג מתאים במיוחד להבנת "מה קרה לפני מה".</p>`,
+    title: 'למה Deployment לא פותר את זה?',
+    html: `<p>ב-Deployment אנחנו קובעים <strong>כמה</strong> עותקים ירוצו, לא <strong>איפה</strong>. גם אם יש 3 Nodes ונבקש 3 עותקים, ה-Scheduler חופשי לשים שניים על אותו Node ולהשאיר Node אחד בלי סוכן בכלל. הלוגים של אותו Node פשוט לא ייאספו.</p>`,
     code: {
       language: 'text',
       content:
-        '09:01 Application started\n09:02 Connected to database\n09:03 Payment failed\n09:04 Retry payment\n09:05 Payment completed',
+        'replicas: 3\n\nnode-1: agent, agent   <- שניים על אותו Node\nnode-2: agent\nnode-3: (כלום)         <- נקודה עיוורת',
     },
   },
 
   {
     type: 'content',
-    title: 'stdout מתאים לעולם מודרני',
-    html: `<p>במקום שהאפליקציה תנהל בעצמה קובץ, היא יכולה להדפיס את הלוגים ל-stdout. הסביבה שמריצה את האפליקציה, למשל Docker או Kubernetes, יודעת לקחת משם את ההודעות ולטפל בהן.</p><ul><li>האפליקציה כותבת החוצה</li><li>הסביבה אוספת את הפלט</li><li>הקוד נשאר פשוט יותר</li></ul><p class="content-slide__prompt">שאלת מעבר: אם הכול נמצא בקובץ אחד או בפלט אחד, איך מחפשים בו?</p>`,
+    title: 'והאשכול משתנה כל הזמן',
+    html: `<p>נניח שהצלחנו לכוון ידנית עותק לכל Node. מחר ה-Autoscaler מוסיף Node חדש בגלל עומס, ואף אחד לא זוכר להוסיף לו סוכן. ה-Node החדש עובד, מריץ Pods, אבל אף אחד לא אוסף ממנו לוגים ולא מודד אותו.</p><ul><li>Nodes נוספים ונעלמים אוטומטית</li><li>ניהול ידני לא עומד בקצב</li><li>כל פספוס יוצר נקודה עיוורת</li></ul><p class="content-slide__prompt">שאלת מעבר: מי ידאג שעל כל Node, תמיד, ירוץ בדיוק עותק אחד?</p>`,
   },
 
   {
     type: 'section',
-    title: 'מערכת פשוטה',
-    intro: 'שרת אחד, אפליקציה אחת, ומקום אחד לחפש בו',
+    title: 'DaemonSet',
+    intro: 'העותק שרץ על כל Node, בלי שנבקש כמה',
   },
 
   {
     type: 'content',
-    title: 'בשרת אחד קל לחשוב',
-    html: `<p>כאשר יש שרת אחד שמריץ אפליקציה אחת, החיים פשוטים. כל הלוגים נמצאים באותו מקום, ולכן גם החקירה מתחילה באותו מקום. אין שאלה איפה התקלה נרשמה.</p><ul><li>שרת אחד</li><li>קובץ לוג אחד</li><li>רצף אירועים אחד</li></ul>`,
+    title: 'הפתרון: DaemonSet',
+    html: `<p>ל-Kubernetes יש משאב שנבנה בדיוק לצורך הזה: <strong>DaemonSet</strong>. במקום להגדיר מספר עותקים, מגדירים תבנית של Pod, ו-Kubernetes דואג שעותק אחד שלה ירוץ על כל Node באשכול. לא צריך לספור Nodes ולא לעדכן מספרים.</p><ul><li>אין שדה replicas בכלל</li><li>עותק אחד לכל Node</li><li>Kubernetes אוכף את זה כל הזמן</li></ul>`,
   },
 
   {
     type: 'content',
-    title: 'מחפשים מילה חשובה',
-    html: `<p>אם המשתמש מדווח על בעיית תשלום, אפשר לחפש בקובץ מילים שמייצגות את התקלה. זו דרך פשוטה ומהירה כל עוד כמות המידע קטנה וכל הלוגים נמצאים במקום אחד.</p>`,
+    title: 'Node נוסף? Pod נוסף',
+    html: `<p>הקסם האמיתי הוא בהתנהגות לאורך זמן. כש-Node חדש מצטרף לאשכול, ה-DaemonSet מריץ עליו Pod אוטומטית. כש-Node יורד, ה-Pod שלו נמחק יחד איתו. האשכול משתנה, והכיסוי נשאר מלא.</p>`,
+    code: {
+      language: 'text',
+      content:
+        'node-4 joined the cluster\n  -> DaemonSet schedules pod on node-4\n\nnode-2 removed\n  -> its pod is garbage collected',
+    },
+  },
+
+  {
+    type: 'content',
+    title: 'DaemonSet מול Deployment',
+    html: `<p>שניהם מריצים עותקים של אותו Pod, אבל הם עונים על שאלות שונות. Deployment עונה על "כמה עותקים צריך כדי לעמוד בעומס?". DaemonSet עונה על "איך מבטיחים נוכחות על כל Node?".</p><ul><li>Deployment: מספר עותקים, מיקום גמיש</li><li>DaemonSet: עותק לכל Node, המספר נגזר מהאשכול</li><li>Deployment ל-Scale, DaemonSet לכיסוי</li></ul><p class="content-slide__prompt">שאלת מעבר: אילו דברים באמת מריצים ככה בעולם האמיתי?</p>`,
+  },
+
+  {
+    type: 'section',
+    title: 'שימושים בעולם האמיתי',
+    intro: 'איפה פוגשים DaemonSet כמעט בכל אשכול',
+  },
+
+  {
+    type: 'content',
+    title: 'איסוף לוגים מכל Node',
+    html: `<p>זוכרים את שיעור הלוגים? כדי לרכז לוגים, צריך Collector שקורא אותם מכל מכונה. כלים כמו <strong>Fluentd</strong>, <strong>Fluent Bit</strong> ו-<strong>Promtail</strong> רצים בדיוק כך: DaemonSet ששם עותק על כל Node, קורא את הלוגים המקומיים ושולח אותם למרכז.</p><ul><li>עותק אחד על כל Node</li><li>קורא את הלוגים של כל ה-Pods במכונה</li><li>שולח ל-Elasticsearch או Loki</li></ul>`,
+  },
+
+  {
+    type: 'content',
+    title: 'ניטור ה-Node עצמו',
+    html: `<p>כדי לדעת כמה CPU, זיכרון ודיסק כל מכונה צורכת, צריך סוכן שיושב עליה ומודד מבפנים. <strong>Node Exporter</strong> של Prometheus הוא הדוגמה הקלאסית: DaemonSet שחושף מדדים של כל Node, ומערכת הניטור אוספת אותם.</p><ul><li>מדדי CPU, RAM ודיסק לכל Node</li><li>אין Node בלי מדידה</li><li>Node חדש מנוטר מהרגע הראשון</li></ul>`,
+  },
+
+  {
+    type: 'content',
+    title: 'Kubernetes בעצמו משתמש בזה',
+    html: `<p>גם רכיבי הליבה של האשכול רצים כ-DaemonSets. <strong>kube-proxy</strong>, שמנהל את חוקי הרשת, חייב לרוץ על כל Node. גם תוספי רשת כמו Calico או Weave, וסוכני אחסון מבוזר כמו Ceph, עובדים באותה שיטה. אפשר לראות את זה באשכול אמיתי:</p>`,
     code: {
       language: 'bash',
-      content: 'grep "Payment failed" app.log\ngrep "timeout" app.log',
-    },
-  },
-
-  {
-    type: 'content',
-    title: 'למה זה מספיק בהתחלה?',
-    html: `<p>במערכת קטנה אין הרבה מקומות לבדוק ואין יותר מדי שורות לקרוא. מתחברים לשרת, מחפשים בקובץ, ומקבלים תשובה. זו לא ארכיטקטורה מתוחכמת, אבל היא עובדת כי הבעיה עדיין קטנה.</p><ul><li>מעט לוגים</li><li>מעט שרתים</li><li>מעט מקורות מידע</li></ul><p class="content-slide__prompt">שאלת מעבר: מה קורה כשהמערכת כבר לא קטנה?</p>`,
-  },
-
-  {
-    type: 'section',
-    title: 'כשהמערכת גדלה',
-    intro: 'הלוגים נשארים טקסט פשוט, אבל החיפוש כבר לא פשוט',
-  },
-
-  {
-    type: 'content',
-    title: 'יותר משתמשים יוצרים עומס',
-    html: `<p>ככל שיש יותר משתמשים, שרת אחד כבר לא תמיד מספיק. כדי להתמודד עם העומס, מריצים כמה עותקים של האפליקציה על כמה שרתים. כל עותק ממשיך לכתוב לוגים, אבל עכשיו הלוגים מפוזרים.</p><ul><li>יותר בקשות</li><li>יותר שרתים</li><li>יותר קובצי לוג</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'איפה התקלה נרשמה?',
-    html: `<p>לקוח אומר שהתשלום נכשל בשעה 09:03. אתם יודעים שהמידע נמצא בלוגים, אבל לא יודעים באיזה שרת. לפני שמחפשים את השורה הנכונה, צריך לנחש איפה להתחיל לחפש.</p><ul><li>server-1/app.log</li><li>server-2/app.log</li><li>server-3/app.log</li></ul>`,
-    code: {
-      language: 'text',
       content:
-        'server-1: no error\nserver-2: Payment failed timeout\nserver-3: no error',
+        'kubectl get daemonsets -n kube-system\n\nNAME         DESIRED   CURRENT   READY\nkube-proxy   3         3         3\ncalico-node  3         3         3',
     },
   },
 
   {
-    type: 'content',
-    title: 'הבעיה היא לא רק חיפוש',
-    html: `<p>בשלב הזה הקושי הוא לא רק למצוא מילה בתוך קובץ. הקושי הוא לדעת באיזה קובץ לחפש, באיזה שרת להתחבר, והאם הלוג עדיין קיים שם. ככל שהמערכת גדלה, החקירה הופכת לאיטית ושבירה.</p><ul><li>צריך לעבור בין שרתים</li><li>אין תמונה אחת של המערכת</li><li>קל לפספס אירועים</li></ul><p class="content-slide__prompt">שאלת מעבר: ומה קורה כשהשרתים עצמם כבר לא קבועים?</p>`,
-  },
-
-  {
     type: 'section',
-    title: 'Kubernetes משנה את כללי המשחק',
-    intro: 'האפליקציה כבר לא קשורה לשרת קבוע אחד',
+    title: 'כותבים DaemonSet',
+    intro: 'מהרעיון לקובץ YAML שרץ באשכול',
   },
 
   {
     type: 'content',
-    title: 'האפליקציה רצה בתוך Pods',
-    html: `<p>ב-Kubernetes אנחנו לא חושבים רק על שרת שמריץ אפליקציה. האפליקציה רצה בתוך <strong>Pod</strong>, וה-Pod יכול להיווצר, להימחק, או לעבור ל-Node אחר לפי החלטות של המערכת.</p><ul><li>Pod הוא סביבת הרצה לאפליקציה</li><li>Node הוא המכונה שמריצה Pods</li><li>Kubernetes מנהל את המיקום</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'Pods הם זמניים',
-    html: `<p>אם Pod קורס, Kubernetes יכול ליצור Pod חדש במקומו. אם יש עומס, הוא יכול להוסיף עוד Pods. זה מצוין לזמינות של המערכת, אבל זה מקשה על חקירת לוגים שנשארים צמודים ל-Pod הישן.</p><ul><li>Pod יכול להימחק</li><li>Pod חדש מקבל שם אחר</li><li>הלוג המקומי עלול להיעלם</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'גישה לשרת כבר לא מספיקה',
-    html: `<p>בעולם הישן התחברנו לשרת וחיפשנו בקובץ. ב-Kubernetes זו כבר לא נקודת אחיזה טובה. ייתכן שה-Pod כבר לא קיים, ייתכן שהוא עבר Node, וייתכן שיש עשרות עותקים של אותה אפליקציה.</p><ul><li>אין מקום קבוע אחד</li><li>אין קובץ יחיד לבדוק</li><li>צריך לאסוף את הלוגים לפני שהם נעלמים</li></ul><p class="content-slide__prompt">שאלת מעבר: איך מחזירים לעצמנו מקום אחד לחפש בו?</p>`,
-  },
-
-  {
-    type: 'section',
-    title: 'Log Aggregation',
-    intro: 'במקום לרדוף אחרי הלוגים, מביאים אותם למקום מרכזי',
-  },
-
-  {
-    type: 'content',
-    title: 'צריך לרכז את הלוגים',
-    html: `<p>אם הלוגים מפוזרים בין שרתים, Pods וקבצים, הפתרון הטבעי הוא לאסוף אותם למערכת מרכזית. כך החקירה מתחילה ממקום אחד, גם אם האירועים נוצרו במקומות שונים.</p><ul><li>כל מקור ממשיך לכתוב לוגים</li><li>הלוגים נשלחים למערכת מרכזית</li><li>החיפוש נעשה במקום אחד</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'מי אוסף את הלוגים?',
-    html: `<p>כדי שהלוגים יגיעו למרכז, צריך תהליך שקורא אותם מהמכונה, מהקובץ או מ-stdout, ושולח אותם הלאה. לתהליך הזה קוראים בדרך כלל <strong>Log Collector</strong>.</p><ul><li>קורא לוגים ממקור מקומי</li><li>מוסיף הקשר כמו שם שירות או Pod</li><li>שולח לאחסון מרכזי</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'מה הרווחנו מהריכוז?',
-    html: `<p>ברגע שכל הלוגים מגיעים למערכת אחת, החקירה כבר לא מתחילה בשאלה "לאיזה שרת להתחבר?". אפשר לחפש לפי זמן, שירות, שגיאה או סביבה, ולקבל תמונה רחבה יותר של מה שקרה.</p><ul><li>פחות מעבר בין שרתים</li><li>שמירה גם אחרי ש-Pod נעלם</li><li>חקירה אחידה לכל המערכת</li></ul><p class="content-slide__prompt">שאלת מעבר: איך נראית הזרימה המלאה של לוג במערכת כזו?</p>`,
-  },
-
-  {
-    type: 'section',
-    title: 'ארכיטקטורת מערכת לוגים',
-    intro: 'מהרגע שהאירוע נכתב ועד הרגע שמפתח רואה אותו',
-  },
-
-  {
-    type: 'content',
-    title: 'הלוג עובר כמה תחנות',
-    html: `<p>מערכת לוגים מרכזית היא שרשרת. האפליקציה כותבת, ה-Collector אוסף, מערכת האחסון שומרת, וכלי צפייה מציג את התוצאות. אם מבינים את הזרימה, קל להבין את התפקיד של כל טכנולוגיה שנפגוש בהמשך.</p><ul><li>Application</li><li>Log File / stdout</li><li>Log Collector</li><li>Log Storage</li><li>Visualization</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'זרימת הלוג המלאה',
-    html: `<p>המסלול הזה הופך אירוע קטן בתוך אפליקציה למידע שאפשר לחפש ולראות במקום מרכזי. כל שלב מוסיף יכולת אחרת: יצירה, איסוף, שמירה, וחיפוש.</p>`,
+    title: 'המבנה מוכר, בלי replicas',
+    html: `<p>אם כתבתם פעם Deployment, אתם כבר יודעים לכתוב DaemonSet. אותו מבנה בדיוק: metadata, selector, ותבנית Pod. משנים את ה-kind, מוחקים את replicas, וזהו. את הכמות קובע האשכול.</p>`,
     code: {
-      language: 'text',
+      language: 'yaml',
       content:
-        'Application\n  -> stdout / app.log\n  -> Log Collector\n  -> Log Storage\n  -> Visualization',
+        'apiVersion: apps/v1\nkind: DaemonSet\nmetadata:\n  name: node-agent\nspec:\n  selector:\n    matchLabels:\n      app: node-agent\n  template:\n    metadata:\n      labels:\n        app: node-agent\n    spec:\n      containers:\n        - name: agent\n          image: node-agent:1.0',
     },
   },
 
   {
     type: 'content',
-    title: 'עכשיו הכול במקום אחד',
-    html: `<p>ריכוז הלוגים פתר את בעיית הפיזור. כבר לא צריך לדעת באיזה שרת האירוע נכתב. אבל ברגע שכל הלוגים של כל המערכת מגיעים למקום אחד, מופיעה בעיה חדשה: הכמות.</p><ul><li>הרבה שירותים</li><li>הרבה Pods</li><li>הרבה מאוד שורות לוג</li></ul><p class="content-slide__prompt">שאלת מעבר: איך מחפשים במהירות בתוך כמות כזו של מידע?</p>`,
-  },
-
-  {
-    type: 'section',
-    title: 'הבעיה החדשה: חיפוש גדול',
-    intro: 'ריכזנו את הלוגים, ועכשיו צריך למצוא מחט בערימת טקסט',
-  },
-
-  {
-    type: 'content',
-    title: 'חיפוש רגיל כבר כבד',
-    html: `<p>כאשר יש קובץ קטן, אפשר לסרוק אותו מההתחלה עד הסוף. אבל במערכת מרכזית יש מיליוני או מיליארדי שורות. אם כל חיפוש קורא את הכול מחדש, כל שאלה הופכת לאיטית ויקרה.</p><ul><li>הרבה יותר מידע</li><li>הרבה יותר חיפושים</li><li>זמן תגובה ארוך</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'מהו Full Scan?',
-    html: `<p><strong>Full Scan</strong> הוא מצב שבו כדי לענות על שאלה, המערכת עוברת על כל הרשומות אחת אחת. זה פשוט להבנה, אבל לא מתאים כשכמות המידע גדולה והמשתמש מצפה לתשובה מהירה.</p>`,
+    title: 'דוגמה אמיתית: Fluentd על כל Node',
+    html: `<p>כדי ש-Collector יקרא את הלוגים של המכונה, הוא צריך גישה לתיקיית הלוגים של ה-Node. עושים את זה עם <strong>hostPath</strong>: מחברים את /var/log של המכונה לתוך ה-Container.</p>`,
     code: {
-      language: 'text',
+      language: 'yaml',
       content:
-        'Search: "timeout"\nread log line 1\nread log line 2\nread log line 3\n...\nread every log line',
+        'kind: DaemonSet\nmetadata:\n  name: fluentd\nspec:\n  template:\n    spec:\n      containers:\n        - name: fluentd\n          image: fluent/fluentd\n          volumeMounts:\n            - name: varlog\n              mountPath: /var/log\n      volumes:\n        - name: varlog\n          hostPath:\n            path: /var/log',
     },
   },
 
   {
     type: 'content',
-    title: 'צריך מנוע חיפוש',
-    html: `<p>כדי לחפש מהר, צריך מערכת שמכינה מראש מבנה שמאפשר למצוא מידע בלי לקרוא את כל הלוגים בכל פעם. כאן נכנס הרעיון של מנוע חיפוש ללוגים.</p><ul><li>הכנה מראש של המידע</li><li>חיפוש מהיר יותר</li><li>פחות קריאה חוזרת של כל הנתונים</li></ul><p class="content-slide__prompt">שאלת מעבר: איזו מערכת נבנתה בדיוק בשביל חיפוש מהיר בטקסט?</p>`,
-  },
-
-  {
-    type: 'section',
-    title: 'Elasticsearch',
-    intro: 'כשהבעיה היא חיפוש מהיר בטקסט גדול',
-  },
-
-  {
-    type: 'content',
-    title: 'למה צריך Elasticsearch?',
-    html: `<p>כאשר יש כמויות גדולות של טקסט ורוצים למצוא מהר מילים, שגיאות או מזהים, צריך מנוע שמותאם לחיפוש. <strong>Elasticsearch</strong> נוצר כדי לאחסן מסמכים ולחפש בהם במהירות.</p><ul><li>מתאים לחיפוש טקסט</li><li>עובד עם כמויות גדולות</li><li>מחזיר תוצאות במהירות</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'מה התפקיד שלו בלוגים?',
-    html: `<p>במערכת לוגים, Elasticsearch יכול לשמש כמקום שבו שומרים את הלוגים ומחפשים בהם. במקום להריץ grep על קובץ, שולחים שאילתה למנוע חיפוש שמחזיק מבנה מוכן לחיפוש.</p><ul><li>מקבל לוגים ממערכת האיסוף</li><li>שומר אותם כמסמכים</li><li>מאפשר חיפוש לפי תוכן</li></ul><p class="content-slide__prompt">שאלת מעבר: איך מנוע חיפוש מצליח למצוא מילים בלי לקרוא הכול מחדש?</p>`,
-  },
-
-  {
-    type: 'section',
-    title: 'Index',
-    intro: 'הטריק שמאפשר לחפש מהר',
-  },
-
-  {
-    type: 'content',
-    title: 'איך מוצאים מהר בספר?',
-    html: `<p>בספר עבה, לא נחפש מילה על ידי קריאת כל העמודים מההתחלה. נלך לאינדקס בסוף הספר, נמצא את המילה, ונקבל רשימת עמודים שבהם היא מופיעה. זה אותו רעיון בסיסי.</p><ul><li>המילה כבר מופיעה באינדקס</li><li>האינדקס מצביע למיקום</li><li>לא צריך לקרוא את כל הספר</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'Index מקצר את הדרך',
-    html: `<p><strong>Index</strong> הוא מבנה עזר שמחזיק מידע על איפה דברים נמצאים. במקום לבדוק כל שורת לוג מחדש, המערכת משתמשת באינדקס כדי להגיע מהר לשורות הרלוונטיות.</p><ul><li>מילה</li><li>מיקומים שבהם היא הופיעה</li><li>קישור למסמכים המתאימים</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'איך זה נראה בלוגים?',
-    html: `<p>אם המילה timeout הופיעה בשלושה לוגים, האינדקס יכול לזכור את הקשר הזה מראש. בזמן חיפוש, המערכת לא מתחילה מאפס. היא שואלת את האינדקס איפה timeout הופיע.</p>`,
+    title: 'מריצים ובודקים',
+    html: `<p>יוצרים את ה-DaemonSet כמו כל משאב אחר, עם kubectl apply. אחר כך בודקים את המצב שלו. שימו לב לעמודה DESIRED: לא כתבנו בשום מקום 3. המספר הזה הגיע ממספר ה-Nodes באשכול.</p>`,
     code: {
-      language: 'text',
+      language: 'bash',
       content:
-        'timeout -> log-103, log-884, log-901\npayment -> log-211, log-884\nfailed  -> log-884, log-920',
+        'kubectl apply -f fluentd.yaml\nkubectl get daemonsets\n\nNAME      DESIRED   CURRENT   READY   AVAILABLE\nfluentd   3         3         3       3',
     },
   },
 
   {
     type: 'content',
-    title: 'הרעיון ברור, אבל יש מחיר',
-    html: `<p>Index נותן חיפוש מהיר, אבל הוא לא מגיע בחינם. צריך לבנות אותו, לעדכן אותו, ולשמור אותו. ככל שמאנדקסים יותר תוכן, כך המערכת עושה יותר עבודה.</p><ul><li>מהיר בזמן חיפוש</li><li>יקר בזמן כתיבה</li><li>דורש עוד אחסון וזיכרון</li></ul><p class="content-slide__prompt">שאלת מעבר: מה באמת קורה כש-Elasticsearch מקבל לוג חדש?</p>`,
-  },
-
-  {
-    type: 'section',
-    title: 'איך Elasticsearch מחפש?',
-    intro: 'החיפוש מהיר כי העבודה הקשה נעשית לפני השאילתה',
-  },
-
-  {
-    type: 'content',
-    title: 'הלוג מתפרק למילים',
-    html: `<p>כאשר לוג נכנס ל-Elasticsearch, הוא לא נשמר רק כשורה אחת של טקסט. המערכת מנתחת אותו, מפרקת אותו למילים ולשדות, ובונה קשר בין כל מילה לבין הלוג שבו היא הופיעה.</p><ul><li>קבלת לוג חדש</li><li>פירוק למילים</li><li>עדכון האינדקס</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'חיפוש משתמש באינדקס',
-    html: `<p>כאשר מחפשים timeout, Elasticsearch לא חייב לקרוא מחדש את כל הלוגים. הוא בודק באינדקס אילו מסמכים מכילים את המילה, ואז מחזיר את הלוגים המתאימים.</p>`,
+    title: 'אחד על כל Node, באמת',
+    html: `<p>אפשר לוודא את ההבטחה בעיניים: מציגים את ה-Pods עם העמודה NODE, ורואים שכל Pod נחת על Node אחר. בדיוק עותק אחד לכל מכונה, בלי שביקשנו מיקום ידנית.</p><p class="content-slide__prompt">שאלת מעבר: ומה אם רוצים עותק רק על חלק מה-Nodes?</p>`,
     code: {
-      language: 'text',
+      language: 'bash',
       content:
-        'Log 884: payment failed because of timeout\n\nIndex:\ntimeout -> 884\npayment -> 884\nfailed  -> 884\n\nSearch "timeout" -> Log 884',
+        'kubectl get pods -l app=fluentd -o wide\n\nNAME            READY   STATUS    NODE\nfluentd-8xk2p   1/1     Running   node-1\nfluentd-q94mm   1/1     Running   node-2\nfluentd-zl7ws   1/1     Running   node-3',
     },
   },
 
   {
-    type: 'content',
-    title: 'למה זה מרגיש מהיר?',
-    html: `<p>החיפוש מהיר כי המערכת כבר שילמה חלק גדול מהמחיר בזמן הכנסת הלוגים. במקום שכל משתמש יחכה לסריקה מלאה, Elasticsearch משתמש במבנה שהוכן מראש.</p><ul><li>פחות קריאה בזמן חיפוש</li><li>תוצאות מהירות יותר</li><li>מתאים לשאלות טקסט גמישות</li></ul><p class="content-slide__prompt">שאלת מעבר: אם זה כל כך טוב, למה לא להשתמש בזה תמיד?</p>`,
-  },
-
-  {
     type: 'section',
-    title: 'למה Elasticsearch יקר?',
-    intro: 'חיפוש מהיר דורש עבודה רבה בזמן הכתיבה',
+    title: 'לא תמיד רוצים את כולם',
+    intro: 'שליטה על אילו Nodes ה-DaemonSet יכסה',
   },
 
   {
     type: 'content',
-    title: 'כל לוג חדש מפעיל עבודה',
-    html: `<p>במערכת לוגים, לוגים לא מגיעים פעם ביום. הם זורמים כל הזמן. אם כל שורה חדשה צריכה להתפרק, להתאנדקס ולהישמר, המערכת עובדת קשה מאוד גם כשאף אחד לא מחפש.</p><ul><li>קליטת לוגים רציפה</li><li>ניתוח כל שורה</li><li>עדכון מבני חיפוש</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'מה המחיר של אינדוקס מלא?',
-    html: `<p>כאשר מאנדקסים הרבה מילים מהרבה לוגים, צריך יותר CPU לעיבוד, יותר RAM לניהול מבני החיפוש, ויותר Storage כדי לשמור גם את הלוגים וגם את האינדקסים.</p><ul><li>CPU לפירוק ועיבוד</li><li>RAM לניהול אינדקסים</li><li>Storage ללוגים ולאינדקס</li><li>תחזוקה של Cluster גדול</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'הבעיה היא התאמה לצורך',
-    html: `<p>Elasticsearch חזק מאוד, אבל לא כל חיפוש לוגים צריך אינדוקס מלא של כל מילה. אם רוב החקירות מתחילות לפי שירות, Namespace, Pod וטווח זמן, אולי אפשר לשלם פחות ועדיין למצוא את מה שצריך.</p><ul><li>הכוח גדול</li><li>העלות גדולה</li><li>צריך לשאול איך באמת מחפשים לוגים</li></ul><p class="content-slide__prompt">שאלת מעבר: האם מהנדסים באמת מחפשים כל מילה חופשית?</p>`,
-  },
-
-  {
-    type: 'section',
-    title: 'האם צריך לאנדקס כל מילה?',
-    intro: 'אולי מספיק לאנדקס את השאלות שבהן מתחילים חקירה',
-  },
-
-  {
-    type: 'content',
-    title: 'איך חקירה מתחילה באמת?',
-    html: `<p>בפועל, מהנדס לרוב לא מתחיל משאלה כללית כמו "מצא כל דבר מעניין". הוא מתחיל מהקשר: איזה שירות בעייתי, באיזה Namespace, איזה Pod, ובאיזה טווח זמן התקלה קרתה.</p><ul><li>Service</li><li>Namespace</li><li>Pod</li><li>Time Range</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'קודם מצמצמים, ואז קוראים',
-    html: `<p>אם יודעים שהבעיה הייתה בשירות payments בחמש הדקות האחרונות, לא צריך לחפש בכל הלוגים של כל הארגון. אפשר קודם לצמצם את המקור, ואז לקרוא את השורות הרלוונטיות.</p>`,
+    title: 'רק Nodes שסימנו: nodeSelector',
+    html: `<p>לפעמים הסוכן רלוונטי רק לחלק מהמכונות. למשל, סוכן שמנטר דיסקים מהירים נחוץ רק על Nodes עם SSD. מסמנים את ה-Nodes המתאימים ב-Label, ומוסיפים <strong>nodeSelector</strong> לתבנית ה-Pod. ה-DaemonSet יכסה רק אותם.</p>`,
     code: {
-      language: 'text',
+      language: 'yaml',
       content:
-        'service=payments\nnamespace=prod\npod=payments-7f9d\nrange=09:00-09:05',
+        '# kubectl label nodes node-2 ssd="true"\n\nspec:\n  template:\n    spec:\n      nodeSelector:\n        ssd: "true"',
     },
   },
 
   {
     type: 'content',
-    title: 'זו חשיבה אחרת',
-    html: `<p>במקום לאנדקס כל מילה בכל לוג, אפשר לאנדקס רק את המאפיינים שעוזרים לצמצם את החיפוש. אחר כך סורקים את הלוגים המצומצמים עצמם. זו הפשרה שמובילה אותנו ל-Loki.</p><ul><li>אינדוקס קטן יותר</li><li>חיפוש לפי הקשר</li><li>קריאת תוכן רק אחרי צמצום</li></ul><p class="content-slide__prompt">שאלת מעבר: איזו מערכת נבנתה סביב הגישה הזאת?</p>`,
-  },
-
-  {
-    type: 'section',
-    title: 'Loki',
-    intro: 'מערכת לוגים שחושבת כמו Prometheus: קודם Labels',
-  },
-
-  {
-    type: 'content',
-    title: 'למה פיתחו את Loki?',
-    html: `<p>Grafana Labs פיתחו את Loki כדי לתת דרך חסכונית יותר לעבוד עם לוגים, במיוחד בסביבות Kubernetes. הרעיון הוא לא להתחרות ב-Elasticsearch על אינדוקס מלא של כל מילה, אלא לשנות את נקודת המוצא.</p><ul><li>פחות אינדוקס</li><li>שימוש חזק ב-Labels</li><li>חיבור טבעי ל-Grafana</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'מה ההבדל בגישה?',
-    html: `<p>Loki מאנדקס בעיקר <strong>Labels</strong>, לא את כל תוכן הלוג. כך הוא יודע להגיע מהר לזרם הלוגים הנכון לפי שירות, Namespace או Pod, ואז לחפש בתוך הטקסט המצומצם.</p><ul><li>Elasticsearch: אינדוקס רחב של תוכן</li><li>Loki: אינדוקס של Labels</li><li>פחות עבודה על כל לוג חדש</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'למה Loki חסכוני יותר?',
-    html: `<p>כאשר לא מאנדקסים כל מילה, צריך פחות CPU, פחות RAM ופחות אחסון עבור מבני חיפוש. משלמים פחות בזמן כתיבה, ובתמורה מחפשים נכון יותר: קודם מצמצמים לפי Labels ואז בודקים את תוכן הלוגים.</p><ul><li>אינדקס קטן יותר</li><li>כתיבה זולה יותר</li><li>מתאים מאוד ללוגים מ-Kubernetes</li></ul><p class="content-slide__prompt">שאלת מעבר: מהם Labels, ולמה הם כל כך חשובים ב-Loki?</p>`,
-  },
-
-  {
-    type: 'section',
-    title: 'Labels ב-Loki',
-    intro: 'המידע הקטן שמאפשר למצוא את זרם הלוגים הנכון',
-  },
-
-  {
-    type: 'content',
-    title: 'מהם Labels?',
-    html: `<p><strong>Labels</strong> הם זוגות של שם וערך שמתארים את מקור הלוג. הם לא חייבים להיות הטקסט של ההודעה עצמה, אלא ההקשר שמסביר מאיפה ההודעה הגיעה.</p><ul><li>service=payments</li><li>namespace=prod</li><li>pod=payments-7f9d</li><li>container=api</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'Labels מחליפים אינדקס מלא',
-    html: `<p>במקום לשאול את האינדקס "איפה הופיעה המילה timeout בכל העולם?", Loki שואל קודם "איפה הלוגים של service=payments בזמן הזה?". אחרי שהטווח קטן, אפשר לחפש בתוך השורות עצמן.</p>`,
+    title: 'ומה עם Nodes מוגנים?',
+    html: `<p>ל-Nodes של ה-Control Plane יש <strong>Taint</strong> שמרחיק מהם Pods רגילים. אבל סוכן לוגים או ניטור צריך לרוץ גם שם, אחרת ה-Nodes החשובים ביותר יהיו נקודה עיוורת. בשביל זה מוסיפים ל-Pod <strong>Toleration</strong>.</p>`,
     code: {
-      language: 'text',
+      language: 'yaml',
       content:
-        '{service="payments", namespace="prod"} |= "timeout"\n\n1. מצא את זרם הלוגים לפי Labels\n2. חפש timeout בתוך הזרם המצומצם',
+        'spec:\n  template:\n    spec:\n      tolerations:\n        - key: node-role.kubernetes.io/control-plane\n          operator: Exists\n          effect: NoSchedule',
     },
   },
 
   {
     type: 'content',
-    title: 'צריך לבחור Labels בזהירות',
-    html: `<p>Labels טובים עוזרים לצמצם חיפוש. Labels גרועים יכולים ליצור יותר מדי זרמים קטנים ולהכביד על המערכת. לכן לא שמים כל פרט כ-Label, אלא רק מידע שבאמת משמש לסינון.</p><ul><li>כן: service, namespace, pod</li><li>בזהירות: user_id, request_id</li><li>המטרה: סינון יעיל, לא אינדוקס מלא</li></ul><p class="content-slide__prompt">שאלת מעבר: איך כל החלקים מתחברים בארכיטקטורת Loki?</p>`,
-  },
-
-  {
-    type: 'section',
-    title: 'ארכיטקטורת Loki',
-    intro: 'מהאפליקציה, דרך Collector, ועד חיפוש ב-Grafana',
-  },
-
-  {
-    type: 'content',
-    title: 'מי שולח לוגים ל-Loki?',
-    html: `<p>האפליקציה כותבת לוגים ל-stdout או לקובץ. Collector כמו Promtail או כלי איסוף אחר קורא את הלוגים, מצרף Labels, ושולח אותם ל-Loki לשמירה.</p><ul><li>Application כותבת לוגים</li><li>Promtail / Collector אוסף</li><li>Loki שומר לוגים ו-Labels</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'הזרימה המלאה ב-Loki',
-    html: `<p>השרשרת דומה לארכיטקטורת לוגים כללית, אבל כאן Loki הוא מערכת האחסון והחיפוש, ו-Grafana היא המקום שבו המשתמש רואה ושואל שאלות על הלוגים.</p>`,
+    title: 'איך מעדכנים DaemonSet?',
+    html: `<p>יצאה גרסה חדשה של הסוכן. כברירת מחדל, DaemonSet מתעדכן ב-<strong>RollingUpdate</strong>: שינוי בתבנית ה-Pod מחליף את העותקים בהדרגה, ו-maxUnavailable קובע כמה מתעדכנים בו-זמנית. את ההתקדמות רואים עם kubectl rollout status.</p>`,
     code: {
-      language: 'text',
+      language: 'yaml',
       content:
-        'Application\n  -> stdout\n  -> Promtail / Collector\n  -> Loki\n  -> Grafana',
+        'spec:\n  updateStrategy:\n    type: RollingUpdate\n    rollingUpdate:\n      maxUnavailable: 1\n\n# kubectl rollout status ds/fluentd',
     },
   },
 
   {
     type: 'content',
-    title: 'Loki לא עובד לבד',
-    html: `<p>Loki יודע לשמור ולחפש לוגים, אבל המשתמש צריך ממשק נוח כדי לשאול שאלות, לראות תוצאות, ולנוע בין שירותים וזמנים. כאן Grafana נכנסת לתמונה.</p><ul><li>Loki שומר ומחזיר לוגים</li><li>Grafana מציגה ושואלת</li><li>החקירה מתבצעת מתוך מסך אחד</li></ul><p class="content-slide__prompt">שאלת מעבר: מה Grafana מוסיפה לחוויית החקירה?</p>`,
-  },
-
-  {
-    type: 'section',
-    title: 'Grafana',
-    intro: 'המקום שבו הלוגים הופכים לכלי עבודה יומיומי',
-  },
-
-  {
-    type: 'content',
-    title: 'Grafana מתחברת ל-Loki',
-    html: `<p>Grafana יכולה להשתמש ב-Loki כמקור מידע. המשתמש בוחר טווח זמן, מסנן לפי Labels, מריץ שאילתה, ורואה את שורות הלוגים שחוזרות מ-Loki.</p><ul><li>בחירת Data Source</li><li>סינון לפי Labels</li><li>חיפוש בטווח זמן</li><li>הצגת שורות לוג</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'חיפוש לוגים ב-Grafana',
-    html: `<p>במקום להתחבר לשרתים, פותחים את Grafana ומתחילים מהקשר: שירות, סביבה, Pod וזמן. משם אפשר לחפש מילים בתוך הלוגים המצומצמים ולראות את האירועים לפי הסדר.</p>`,
-    code: {
-      language: 'text',
-      content:
-        '{service="payments", namespace="prod"} |= "Payment failed"',
-    },
-  },
-
-  {
-    type: 'content',
-    title: 'מ-Metrics ל-Logs',
-    html: `<p>הכוח הגדול של Grafana הוא שהחקירה לא חייבת להתחיל בלוגים. אפשר לראות גרף שמראה עלייה בשגיאות, ללחוץ על הזמן הבעייתי, ולעבור ללוגים של אותו שירות כדי להבין מה קרה בפועל.</p><ul><li>Metrics מראות שמשהו השתנה</li><li>Logs מסבירים מה קרה</li><li>אותו זמן ואותו שירות מחברים בין העולמות</li></ul><p class="content-slide__prompt">שאלת מעבר: אם Logs הם רק חלק מהחקירה, מה עוד צריך כדי להבין מערכת?</p>`,
-  },
-
-  {
-    type: 'section',
-    title: 'Logs, Metrics, Traces',
-    intro: 'שלושת עמודי התווך של Observability',
-  },
-
-  {
-    type: 'content',
-    title: 'Logs מספרים מה קרה',
-    html: `<p>Logs נותנים פרטים נקודתיים: שגיאה, פעולה, בקשה, הודעה מהקוד. הם מצוינים כשצריך להבין אירוע ספציפי, אבל הם לא תמיד הדרך הכי טובה לראות מגמה רחבה.</p><ul><li>אירועים מפורטים</li><li>הקשר מתוך הקוד</li><li>חקירת תקלות ספציפיות</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'Metrics מראות מגמות',
-    html: `<p>Metrics הן מספרים לאורך זמן: כמה בקשות נכנסו, כמה נכשלו, כמה CPU נצרך, ומה זמן התגובה. הן עוזרות לראות שמשהו השתנה עוד לפני שקוראים לוגים.</p><ul><li>קצב בקשות</li><li>אחוז שגיאות</li><li>Latency</li><li>CPU ו-RAM</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'Traces מראות מסע',
-    html: `<p>Trace עוקב אחרי בקשה אחת כשהיא עוברת בין שירותים. אם בקשה התחילה ב-API, המשיכה לשירות תשלומים ונעצרה במסד נתונים, Trace עוזר לראות את המסלול ואת המקום שבו הזמן נעלם.</p><ul><li>בקשה אחת</li><li>כמה שירותים</li><li>איפה התעכבה הפעולה</li></ul>`,
-  },
-
-  {
-    type: 'content',
-    title: 'ביחד רואים את המערכת',
-    html: `<p>Observability טובה מחברת בין שלושת הכלים. Metrics אומרות שיש בעיה, Logs נותנים את הפרטים, ו-Traces מראים את הדרך שהבקשה עברה. עכשיו, אחרי שהבנו Logs, אפשר לעבור טבעית לפרק הבא: Metrics.</p><ul><li>Metrics: האם יש בעיה?</li><li>Logs: מה קרה?</li><li>Traces: איפה זה קרה במסלול?</li></ul>`,
+    title: 'התמונה המלאה',
+    html: `<p>עכשיו שיעור הלוגים נסגר במעגל: כשאמרנו "Promtail רץ על כל Node ואוסף לוגים", הכלי שמבטיח את זה הוא DaemonSet. כשיש משימה שחייבת נוכחות על כל מכונה, זו התשובה של Kubernetes.</p><ul><li>Deployment: כמה עותקים. DaemonSet: עותק על כל Node</li><li>nodeSelector ו-Tolerations מכוונים את הכיסוי</li><li>RollingUpdate מחליף גרסאות בבטחה</li><li>מחיקת ה-DaemonSet מוחקת גם את כל ה-Pods שלו</li></ul>`,
   },
 ]
