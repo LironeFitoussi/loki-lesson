@@ -27,10 +27,10 @@ export function ContentSlide({ slide, meta }: { slide: ContentSlideData; meta: D
               language={slide.code.language}
               customStyle={{
                 margin: 0,
-                padding: '16px 22px',
+                padding: '10px 16px',
                 background: 'transparent',
-                fontSize: '22px',
-                lineHeight: 1.35,
+                fontSize: 'clamp(11px, 1.3vw, 16px)',
+                lineHeight: 1.3,
               }}
               codeTagProps={{
                 style: {
