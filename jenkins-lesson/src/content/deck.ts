@@ -684,6 +684,480 @@ export const slides: Slide[] = [
   {
     type: 'content',
     title: 'למה זה חזק?',
-    html: `<p>בלי Jenkins, כדי להריץ סקריפט Python על שרת הייתם צריכים להתחבר ב-SSH ולהריץ אותו ידנית. עם Jenkins, פשוט לוחצים כפתור - ומקבלים גם הרצה, גם Trigger אוטומטי (Webhook או Cron), וגם היסטוריה מלאה של כל ריצה כולל הפלט שלה. אותו רעיון עובד מצוין גם עם Ansible Playbooks במקום לוגין ידני לשרת כדי להריץ אותם.</p><ul><li>לא צריך SSH ידני לשרת</li><li>Trigger אוטומטי</li><li>היסטוריה מלאה + לוגים</li><li>עובד גם ל-Bash, Python, Ansible ועוד</li></ul>`,
+    html: `<p>בלי Jenkins, כדי להריץ סקריפט Python על שרת הייתם צריכים להתחבר ב-SSH ולהריץ אותו ידנית. עם Jenkins, פשוט לוחצים כפתור - ומקבלים גם הרצה, גם Trigger אוטומטי (Webhook או Cron), וגם היסטוריה מלאה של כל ריצה כולל הפלט שלה. אותו רעיון עובד מצוין גם עם Ansible Playbooks במקום לוגין ידני לשרת כדי להריץ אותם.</p><ul><li>לא צריך SSH ידני לשרת</li><li>Trigger אוטומטי</li><li>היסטוריה מלאה + לוגים</li><li>עובד גם ל-Bash, Python, Ansible ועוד</li></ul><p class="content-slide__prompt">שאלת מעבר: עד עכשיו כל ה-Jobs רצו על ה-Master עצמו - איך מגדירים Agent אמיתי?</p>`,
+  },
+
+  {
+    type: 'section',
+    title: 'הגדרת Agents: Nodes ו-Clouds',
+    intro: 'Manage Jenkins -> Manage Nodes and Clouds',
+  },
+
+  {
+    type: 'content',
+    title: 'שתי דרכים להוסיף Agent',
+    html: `<p>ב-Manage Nodes and Clouds יש שני מסכים עיקריים. <strong>New Node</strong> מגדיר Permanent Agent - שרת Linux או Windows קבוע ש-Jenkins מתחבר אליו ב-SSH ומחלק לו עבודה. זו הדרך הישנה והפחות נפוצה כיום. <strong>Configure Clouds</strong> מגדיר Agents דינמיים על גבי פלטפורמות כמו Docker, Kubernetes או AWS - וזו הדרך המקובלת היום.</p><ul><li>New Node - Permanent Agent (ישן יותר)</li><li>Configure Clouds - Agent דינמי (נפוץ יותר)</li></ul>`,
+  },
+
+  {
+    type: 'content',
+    title: 'התקנת Docker Plugin',
+    html: `<p>כדי ש-Docker יופיע כאופציה תחת Configure Clouds, צריך קודם להתקין את ה-Plugin שלו. נכנסים ל-Plugin Manager, מסננים לפי Cloud Providers, מוצאים <strong>Docker</strong>, ומתקינים אותו. אחרי ההתקנה צריך להפעיל מחדש את שרת Jenkins כדי שה-Plugin ייכנס לתוקף.</p><ul><li>Manage Jenkins -> Plugins -> Available</li><li>סינון לפי Cloud Providers</li><li>Download now and install after restart</li></ul><p class="content-slide__prompt">שאלת מעבר: אחרי ההתקנה, איך מחברים את Jenkins ל-Docker בפועל?</p>`,
+  },
+
+  {
+    type: 'section',
+    title: 'הגדרת Docker Cloud',
+    intro: 'לחבר בין Jenkins Master לבין דוקר שרץ במקום אחר',
+  },
+
+  {
+    type: 'content',
+    title: 'לאן Jenkins צריך להתחבר?',
+    html: `<p>תחת Configure Clouds -> Add Docker -> Docker Cloud details, צריך להגדיר את ה-<strong>Docker Host URI</strong>. אם Docker רץ בתוך אותה מכונה כמו Jenkins - אפשר להצביע ל-127.0.0.1. אבל אם Docker רץ במקום אחר (למשל Docker Desktop על המחשב האישי, מחוץ לקונטיינר של Jenkins) - צריך להצביע לכתובת ה-IP של אותו שרת.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'הבעיה: Jenkins בקונטיינר, Docker על המחשב המקומי',
+    html: `<p>אצלנו Docker רץ דרך Docker Desktop על המחשב המקומי, לא בתוך קונטיינר ה-Jenkins. כדי לגשר על הפער, מריצים קונטיינר עזר עם <strong>socat</strong> שמשמש כ-proxy - הוא מעביר תעבורת TCP מתוך רשת ה-Docker של Jenkins אל ה-Docker Socket של המכונה המארחת.</p>`,
+    code: {
+      language: 'bash',
+      content:
+        'docker run -d --name socat-proxy \\\n  --network jenkins \\\n  -v /var/run/docker.sock:/var/run/docker.sock \\\n  bobrik/socat \\\n  TCP-LISTEN:2375,fork UNIX-CONNECT:/var/run/docker.sock',
+    },
+  },
+
+  {
+    type: 'content',
+    title: 'מוצאים את ה-IP של קונטיינר ה-Proxy',
+    html: `<p>כדי לדעת לאן להפנות את Jenkins, שולפים את כתובת ה-IP הפנימית של קונטיינר ה-socat בתוך ה-network המשותף.</p>`,
+    code: {
+      language: 'bash',
+      content: "docker inspect socat-proxy | grep IPAddress\n# \"IPAddress\": \"172.19.0.3\"",
+    },
+  },
+
+  {
+    type: 'content',
+    title: 'חיבור, בדיקה ושמירה',
+    html: `<p>ב-Docker Host URI מכניסים <strong>tcp://172.19.0.3:2375</strong>, מסמנים Enabled, ולוחצים <strong>Test Connection</strong>. אם הכתובת נכונה, מקבלים אישור חיבור. אם יש שגיאה - כדאי לבדוק Show Details, וברוב המקרים הבעיה היא נושא של ניתוב רשת (routing) בין הקונטיינרים.</p><p class="content-slide__prompt">שאלת מעבר: יש חיבור ל-Docker - איך אומרים ל-Jenkins איזה Image להריץ בתור Agent?</p>`,
+  },
+
+  {
+    type: 'section',
+    title: 'תבנית Docker Agent (Alpine)',
+    intro: 'ה-Template שמגדיר איך נראה Agent חדש שנוצר דינמית',
+  },
+
+  {
+    type: 'content',
+    title: 'Add Docker Template',
+    html: `<p>אחרי שה-Docker Cloud מוגדר ומחובר, חוזרים ל-Configure Clouds ולוחצים <strong>Add Docker Template</strong>. כאן בונים את "המתכון" שלפיו Jenkins ייצור Agent חדש בכל פעם שצריך.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'Label - איך ה-Master מזהה את ה-Agent',
+    html: `<p>ה-<strong>Label</strong> הוא השם שבאמצעותו ה-Pipeline או ה-Job מבקשים להריץ דווקא על ה-Agent הזה. הוא צריך להיות תיאורי, כדי שיהיה ברור מה ה-Agent הזה מספק.</p>`,
+    code: {
+      language: 'text',
+      content: 'Label: docker-agent-alpine\nEnabled: true\nName: docker-agent-alpine',
+    },
+  },
+
+  {
+    type: 'content',
+    title: 'Docker Image - הבסיס של ה-Agent',
+    html: `<p>זה השדה החשוב ביותר: איזה Docker Image ירוץ כשה-Agent נוצר. אפשר למשוך Image מוכן מ-Docker Hub - למשל image רשמי של Jenkins Agent על בסיס Alpine עם JDK 11 - או להצביע ל-Image פרטי משלכם, כל עוד מגדירים Credentials מתאימות כדי ש-Jenkins יוכל למשוך אותו.</p>`,
+    code: {
+      language: 'text',
+      content: 'Docker Image: jenkins/inbound-agent:alpine-jdk11',
+    },
+  },
+
+  {
+    type: 'content',
+    title: 'Instance Capacity ו-Remote File System Root',
+    html: `<p><strong>Instance Capacity</strong> קובע כמה Agents מסוג הזה אפשר להריץ במקביל - כדאי להתחיל עם מספר נמוך, כדי לא להציף את המערכת בטעות. <strong>Remote File System Root</strong> הוא המקום בתוך הקונטיינר שבו ייווצר ה-Workspace - ברירת המחדל המקובלת היא /home/jenkins.</p>`,
+    code: {
+      language: 'text',
+      content: 'Instance Capacity: 2\nRemote File System Root: /home/jenkins',
+    },
+  },
+
+  {
+    type: 'content',
+    title: 'שמירה',
+    html: `<p>אחרי שמילאנו Label, Docker Image, Instance Capacity ו-Remote File System Root - זה כל מה שצריך כדי שה-Template יהיה תקין. לוחצים Save.</p><p class="content-slide__prompt">שאלת מעבר: יש לנו Template - איך גורמים ל-Job להשתמש בו?</p>`,
+  },
+
+  {
+    type: 'section',
+    title: 'הרצת ה-Job הראשון על Docker Agent',
+    intro: 'לחבר בין Job קיים לבין ה-Agent החדש',
+  },
+
+  {
+    type: 'content',
+    title: 'Restrict where this project can be run',
+    html: `<p>נכנסים ל-my_first_job -> Configure, מסמנים <strong>Restrict where this project can be run</strong>, וכותבים את שם ה-Label שהגדרנו - docker-agent-alpine. עכשיו ה-Job הזה ירוץ אך ורק על Agent עם ה-Label הזה, ולא על ה-Master.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'כשה-Label "לא נמצא"',
+    html: `<p>לפעמים ה-autocomplete של Jenkins מוסיף רווח מיותר בסוף ה-Label, וזה גורם להתראה שה-Label לא קיים. פותרים את זה על ידי מחיקת הרווח, ולפעמים גם רק יציאה וחזרה למסך ה-Configure מספיקה כדי שה-UI יתעדכן.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'ה-Build רץ מרחוק',
+    html: `<p>שומרים, לוחצים Build Now - ורואים ש-Jenkins מחפש Agent עם ה-Label docker-agent-alpine. אחרי כמה שניות (Jenkins צריך זמן להקים את הקונטיינר), ה-Agent נוצר, ה-Job רץ עליו בהצלחה, ובמסך ה-Build רואים "Built on docker" עם כל הפרטים של הקונטיינר שהורם.</p><p class="content-slide__prompt">שאלת מעבר: אז אם זה עבד ל-Hello World, זה יעבוד גם ל-Job של Python?</p>`,
+  },
+
+  {
+    type: 'section',
+    title: 'Python Job נכשל על ה-Alpine Agent',
+    intro: 'לא כל Agent מתאים לכל Job',
+  },
+
+  {
+    type: 'content',
+    title: 'אותה שיטה, Job אחר',
+    html: `<p>מגדירים גם את my_python_job להיות מוגבל ל-Label docker-agent-alpine, ומריצים Build Now. הקוד נמשך בהצלחה מה-repository - אבל ה-Build נכשל.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'python3: command not found',
+    html: `<p>הבעיה: ה-Image שבחרנו ל-Template הזה הוא Image רשמי של Jenkins Agent, אבל בלי Python מותקן עליו. ה-Agent הצליח לקום, הקוד נמשך - אבל אין שם python3 להריץ איתו את הסקריפט.</p><ul><li>ה-Agent קם בהצלחה</li><li>הקוד נמשך בהצלחה</li><li>python3 לא קיים ב-Image</li></ul><p class="content-slide__prompt">שאלת מעבר: אז מה עושים כשה-Image המוכן לא מספיק?</p>`,
+  },
+
+  {
+    type: 'section',
+    title: 'תבנית Docker Agent מותאמת ל-Python',
+    intro: 'כשה-Image הכללי לא מספיק - בונים Image משלכם',
+  },
+
+  {
+    type: 'content',
+    title: 'Template שני, ל-Python',
+    html: `<p>הפתרון הוא Docker Template נוסף, עם Image שכולל Python. חוזרים ל-Configure Clouds -> Docker Agent Templates -> Add Docker Template, ונותנים לו Label חדש שמזהה אותו כ-Agent ל-Python.</p>`,
+    code: {
+      language: 'text',
+      content: 'Label: docker-agent-python\nEnabled: true\nName: docker-agent-python',
+    },
+  },
+
+  {
+    type: 'content',
+    title: 'Image מותאם אישית',
+    html: `<p>במקום Image כללי מ-Docker Hub, מצביעים ל-Image פרטי שנבנה במיוחד עם Python מותקן עליו - כאן זה image שנבנה ופורסם מראש ל-Docker Hub.</p>`,
+    code: {
+      language: 'text',
+      content: 'Docker Image: devopsjourney1/my-jenkins-agents:python1\nInstance Capacity: 2\nRemote File System Root: /home/jenkins',
+    },
+  },
+
+  {
+    type: 'content',
+    title: 'מחברים את ה-Job ל-Template החדש',
+    html: `<p>ב-my_python_job -> Configure, מחליפים את ה-Label מ-docker-agent-alpine ל-<strong>docker-agent-python</strong>. שומרים, ומריצים Build Now.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'הפעם זה עובד',
+    html: `<p>ה-Job רץ בהצלחה על ה-Agent החדש, ש-python3 מותקן עליו. שווה לשים לב - זו דוגמה טובה לכך שהרבה פעמים תגלו באגים רק כשמריצים בפועל: הסקריפט הדפיס "hellworld" במקום "hello world", באג קטן בקוד עצמו שלא קשור בכלל ל-Jenkins.</p>`,
+  },
+
+  {
+    type: 'section',
+    title: 'Poll SCM: הפעלה אוטומטית',
+    intro: 'להפסיק ללחוץ Build Now ידנית',
+  },
+
+  {
+    type: 'content',
+    title: 'Build Triggers -> Poll SCM',
+    html: `<p>עד עכשיו הרצנו כל build בלחיצת כפתור. ב-Build Triggers אפשר לסמן <strong>Poll SCM</strong> - כך ה-Master בעצמו בודק מדי פעם אם היה שינוי ב-repository, ומריץ build אוטומטית אם כן. זו חלופה פשוטה יותר מ-Webhook, שעובדת מצוין גם כש-Jenkins נמצא מאחורי Firewall.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'לוח הזמנים של הבדיקה',
+    html: `<p>הפורמט דומה מאוד ל-Cron רגיל. <strong>H/5 * * * *</strong> אומר לבדוק בערך כל 5 דקות. ה-<strong>H</strong> (Hash) גורם ל-Jenkins לבחור נקודת זמן אקראית בתוך כל חלון של 5 דקות - במקום שכל ה-Jobs יבדקו בדיוק באותה שנייה. זו Best Practice: היא מפזרת את העומס במקום שכולם יפגשו את ה-Master בו-זמנית.</p>`,
+    code: {
+      language: 'text',
+      content: 'H/5 * * * *',
+    },
+  },
+
+  {
+    type: 'content',
+    title: 'רואים את זה בפעולה',
+    html: `<p>מתקנים את הבאג בסקריפט ישירות ב-GitHub (hellworld -> hello world) ועושים commit. תוך כמה דקות, בלי שום לחיצה על Build Now, ה-Job מתחיל לרוץ לבד. במסך ה-Build רואים למעלה <strong>"Started by an SCM change"</strong> - הוכחה שה-commit הוא זה שהפעיל את ה-build.</p><p class="content-slide__prompt">שאלת מעבר: יש לנו Agents, Jobs, וטריגר אוטומטי - הזמן לעבור מ-Freestyle ל-Pipeline אמיתי בשפת Groovy</p>`,
+  },
+
+  {
+    type: 'section',
+    title: 'מבוא ל-Pipelines',
+    intro: 'New Item -> Pipeline, במקום Freestyle Project',
+  },
+
+  {
+    type: 'content',
+    title: 'יצירת Pipeline Project',
+    html: `<p>יצירת Pipeline מתחילה בדיוק כמו Freestyle - New Item, נותנים שם (למשל my_first_build_pipeline), אבל הפעם בוחרים <strong>Pipeline</strong> ולא Freestyle Project.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'למה המסך נראה שונה?',
+    html: `<p>מסך ה-Configure של Pipeline דומה בהתחלה, אבל אם גוללים למטה - הרבה מהאפשרויות שהכרנו מ-Freestyle (Build Steps, Post-build Actions) פשוט לא שם. הסיבה: כל הלוגיקה הזו עכשיו חיה בתוך שדה אחד - <strong>Pipeline Script</strong>, כתוב בקוד.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'שתי דרכים לכתוב Pipeline',
+    html: `<p>יש שתי אופציות להזין את הסקריפט. אפשר לכתוב אותו ישירות בתוך תיבת הטקסט ב-UI של Jenkins - וזה מה שנתחיל איתו. אבל השיטה המומלצת היא <strong>Jenkinsfile</strong>: קובץ שיושב בתוך ה-repository עצמו, ו-Jenkins רק מצביע אליו ומריץ אותו משם.</p><ul><li>Pipeline Script - כתוב ישירות ב-UI (להתחלה)</li><li>Jenkinsfile מה-repository (השיטה המומלצת)</li></ul><p class="content-slide__prompt">שאלת מעבר: איך נראה קוד Pipeline בסיסי?</p>`,
+  },
+
+  {
+    type: 'section',
+    title: 'Jenkinsfile Template ותחביר Declarative Pipeline',
+    intro: 'השלד שממנו בונים כל Pipeline',
+  },
+
+  {
+    type: 'content',
+    title: 'Declarative מול Scripted',
+    html: `<p>ל-Pipelines ב-Jenkins יש שני סגנונות כתיבה: <strong>Declarative</strong> ו-<strong>Scripted</strong>. Declarative הוא הסגנון המובנה, הקריא יותר, ובו כדאי להתחיל וברוב המקרים גם להישאר. כשמחפשים syntax באינטרנט - חשוב לוודא שמדובר ב-Declarative Pipeline.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'תבנית בסיסית ל-Jenkinsfile',
+    html: `<p>כל Pipeline עטוף בבלוק <strong>pipeline</strong> יחיד. בתוכו בוחרים <strong>agent</strong> - בדיוק כמו ה-Label שהגדרנו קודם ל-Freestyle - ולאחריו את ה-<strong>stages</strong>.</p>`,
+    code: {
+      language: 'groovy',
+      content:
+        "pipeline {\n    agent {\n        label 'docker-agent-python'\n    }\n\n    stages {\n        stage('Build') {\n            steps {\n                echo 'Building..'\n                sh 'echo build step'\n            }\n        }\n        stage('Test') {\n            steps {\n                echo 'Testing..'\n                sh 'echo test step'\n            }\n        }\n        stage('Deliver') {\n            steps {\n                echo 'Delivering..'\n                sh 'echo deliver step'\n            }\n        }\n    }\n}",
+    },
+  },
+
+  {
+    type: 'content',
+    title: 'agent - איפה זה ירוץ',
+    html: `<p>בלוק ה-<strong>agent</strong> קובע איפה ה-Pipeline ירוץ, בדיוק כמו "Restrict where this project can be run" ב-Freestyle. כאן מצביעים ל-Label של אחד ה-Agents שהגדרנו קודם - docker-agent-python.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'stages ו-steps',
+    html: `<p>זהו Pipeline עם שלושה <strong>stages</strong>: Build, Test ו-Deliver - תבנית בדיקה טובה להתחלה. לכל stage יש <strong>steps</strong> משלו - כאן, לצורך הדוגמה, שני steps בכל stage: echo פשוט, ואחריו placeholder של פקודת shell, שבהמשך נחליף בפקודות אמיתיות.</p><p class="content-slide__prompt">שאלת מעבר: מה קורה כשמריצים את זה בפעם הראשונה?</p>`,
+  },
+
+  {
+    type: 'section',
+    title: 'הרצת ה-Pipeline הראשון וניפוי תקלות',
+    intro: 'Build Now, ולראות מה קורה בכל שלב',
+  },
+
+  {
+    type: 'content',
+    title: 'תצוגת ה-Pipeline נראית אחרת',
+    html: `<p>אחרי Save ו-Build Now, מסך ה-Pipeline נראה שונה לגמרי מ-Freestyle - רואים ויזואלית את שלושת ה-Stages בשורה: Build, Test, Deliver. הפעם Build ירוק, אבל Test ו-Deliver אדומים.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'קוראים את הלוג של כל Stage',
+    html: `<p>לוחצים על כל Stage כדי לראות בדיוק מה קרה בו. Build הדפיס "Building.." והריץ את ה-shell step בהצלחה. Test הדפיס "Testing.." - ואז נכשל.</p>`,
+    code: {
+      language: 'text',
+      content: "sh: 1: echo test step\": unterminated quoted string",
+    },
+  },
+
+  {
+    type: 'content',
+    title: 'כשל בשלב אחד מפיל את הבאים אחריו',
+    html: `<p>Deliver נכשל גם הוא - למרות שהקוד שלו תקין. הסיבה: <strong>Test</strong> הוא Stage במעלה הזרימה (upstream) ביחס ל-Deliver, וכשל ב-Stage upstream גורם ל-Stages שבאים אחריו (downstream) להיכשל אוטומטית בלי אפילו לנסות לרוץ.</p><ul><li>Build - עבר</li><li>Test - נכשל (שגיאת תחביר)</li><li>Deliver - נכשל אוטומטית, כי Test upstream נכשל</li></ul>`,
+  },
+
+  {
+    type: 'content',
+    title: 'מתקנים ומריצים שוב',
+    html: `<p>חוזרים ל-Configure, מתקנים את המרכאה החסרה ב-Test, שומרים, ומריצים שוב. הפעם כל שלושת ה-Stages ירוקים. ב-Pipelines ארוכים יותר הייתם רואים כאן פס התקדמות חי לכל שלב, אבל כשה-Build כל כך מהיר זה קורה כמעט מיידית.</p><p class="content-slide__prompt">שאלת מעבר: זה עבד, אבל הקוד עדיין יושב רק בתוך ה-UI של Jenkins - איך מוציאים אותו החוצה ל-repository?</p>`,
+  },
+
+  {
+    type: 'section',
+    title: 'Jenkinsfile מתוך SCM',
+    intro: 'מעבר מ-Pipeline Script inline ל-Jenkinsfile אמיתי ב-Git',
+  },
+
+  {
+    type: 'content',
+    title: 'יוצרים קובץ Jenkinsfile אמיתי',
+    html: `<p>לוקחים בדיוק את אותו קוד, שומרים אותו כקובץ בשם <strong>Jenkinsfile</strong> בתוך ה-repository, ומתקנים את אותה שגיאת המרכאה תוך כדי.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'מוסיפים Poll SCM גם כאן',
+    html: `<p>בדיוק כמו ב-Freestyle, אפשר להגדיר טריגר גם בתוך ה-Jenkinsfile עצמו, עם בלוק <strong>triggers</strong>. כאן מגדירים בדיקה כל 5 דקות.</p>`,
+    code: {
+      language: 'groovy',
+      content: "pipeline {\n    agent {\n        label 'docker-agent-python'\n    }\n\n    triggers {\n        pollSCM('H/5 * * * *')\n    }\n\n    stages {\n        // ...\n    }\n}",
+    },
+  },
+
+  {
+    type: 'content',
+    title: 'Pipeline Script from SCM',
+    html: `<p>עושים commit ו-push ל-GitHub. בחזרה ב-Jenkins, בתוך הגדרת ה-Pipeline משנים מ-<strong>Pipeline Script</strong> ל-<strong>Pipeline script from SCM</strong>: בוחרים Git, מכניסים את כתובת ה-repository (ואם הוא פרטי - גם Credentials), ומגדירים את ה-Script Path - הנתיב לקובץ Jenkinsfile בתוך ה-repository.</p>`,
+    code: {
+      language: 'text',
+      content: 'SCM: Git\nRepository URL: https://github.com/example/app.git\nScript Path: Jenkinsfile',
+    },
+  },
+
+  {
+    type: 'content',
+    title: 'הרצה ראשונה ידנית',
+    html: `<p>שומרים, ומריצים Build Now פעם אחת ידנית כדי לוודא שהכל עובד. מהריצה הבאה והלאה, כל commit חדש ב-repository (או כל Poll SCM) יפעיל build אוטומטית - בלי צורך להיכנס בכלל ל-Jenkins.</p><p class="content-slide__prompt">שאלת מעבר: אחרי המעבר ל-SCM, האם הפלט נשאר בדיוק אותו דבר?</p>`,
+  },
+
+  {
+    type: 'section',
+    title: 'Pipeline Script from SCM מוסיף שלב Checkout',
+    intro: 'שינוי קטן בהגדרה, שלב חדש בפלט',
+  },
+
+  {
+    type: 'content',
+    title: 'שלב חדש הופיע: Checkout',
+    html: `<p>אחרי המעבר ל-Pipeline script from SCM, בתצוגת ה-Pipeline מופיע Stage נוסף בשם <strong>Checkout</strong>, לפני Build. הסיבה: ברגע שה-Pipeline עצמו מגיע מתוך Git, Jenkins צריך קודם למשוך (clone) את ה-repository כדי בכלל להגיע לקובץ Jenkinsfile - וזה קורה אוטומטית, בלי שכתבתם אותו בעצמכם.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'תופעת לוואי: היסטוריה מתאפסת',
+    html: `<p>שימו לב - כשמבנה ה-Stages משתנה (למשל נוסף Checkout), Jenkins מנקה את היסטוריית ה-Builds הקודמים בתצוגה הגרפית. זו לא תקלה, רק תופעה מוכרת ב-Jenkins שקשורה לאופן שבו הוא משווה בין ריצות עם מבנה Stages שונה.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'התאמת לוח הזמנים לסביבת מעבדה',
+    html: `<p>בסביבת לימוד, חמש דקות המתנה זה הרבה. אפשר לשנות זמנית את ה-Poll SCM לרוץ כל דקה, כדי לראות תוצאות מהר יותר תוך כדי עבודה.</p>`,
+    code: {
+      language: 'groovy',
+      content: "triggers {\n    pollSCM('* * * * *')\n}",
+    },
+  },
+
+  {
+    type: 'content',
+    title: 'זה עובד לבד',
+    html: `<p>עושים build ידני אחד לוודא שהכל תקין - Checkout, Build, Test, Deliver כולם ירוקים, ורואים בפלט שהמקור באמת הגיע דרך ה-Jenkinsfile מה-repository.</p><p class="content-slide__prompt">שאלת מעבר: עד עכשיו כל ה-Stages רק הדפיסו טקסט - איך זה נראה עם אפליקציה אמיתית?</p>`,
+  },
+
+  {
+    type: 'section',
+    title: 'בונים Pipeline אמיתי: Build ו-Test',
+    intro: 'מפסיקים עם echo, עוברים לאפליקציית Python אמיתית',
+  },
+
+  {
+    type: 'content',
+    title: 'האפליקציה: my_app',
+    html: `<p>ב-repository יש תיקייה בשם <strong>my_app</strong> עם סקריפט Python פשוט: הוא מייבא ספרייה בשם <strong>fire</strong> ובונה איתה CLI קטן שמדפיס Hello World - ומקבל גם פרמטר אופציונלי לשם.</p>`,
+    code: {
+      language: 'python',
+      content: "import fire\n\ndef hello(name='World'):\n    print(f'Hello {name}')\n\nif __name__ == '__main__':\n    fire.Fire(hello)",
+    },
+  },
+
+  {
+    type: 'content',
+    title: 'אם פשוט נריץ את זה - זה ייכשל',
+    html: `<p>אם ננסה להריץ את הסקריפט הזה על ה-Agent כמו שהוא, זה ייכשל - כי לספריית <strong>fire</strong> אין מקום מוכן על ה-Agent. קודם צריך להתקין את התלויות של האפליקציה, בדיוק כמו על כל מכונה אחרת.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'שלב Build: התקנת Dependencies',
+    html: `<p>ב-Build Stage, נכנסים לתיקיית my_app ומתקינים את כל מה שרשום ב-requirements.txt - כולל fire.</p>`,
+    code: {
+      language: 'groovy',
+      content: "stage('Build') {\n    steps {\n        sh 'cd my_app && pip install -r requirements.txt'\n    }\n}",
+    },
+  },
+
+  {
+    type: 'content',
+    title: 'שלב Test: מריצים את האפליקציה בשתי צורות',
+    html: `<p>ב-Test Stage מריצים את הסקריפט פעמיים: פעם אחת בלי פרמטרים, כדי לוודא שהוא רץ עם ברירת המחדל, ופעם שנייה עם פרמטר name - כדי לוודא שגם קלט מהמשתמש עובד כמו שצריך.</p>`,
+    code: {
+      language: 'groovy',
+      content: "stage('Test') {\n    steps {\n        sh 'cd my_app && python3 hello.py'\n        sh 'cd my_app && python3 hello.py --name=Brad'\n    }\n}",
+    },
+  },
+
+  {
+    type: 'content',
+    title: 'דוחפים ורואים את זה רץ',
+    html: `<p>שומרים, עושים commit ו-push. תוך דקה ה-Pipeline מתחיל לרוץ לבד דרך ה-Poll SCM. ב-Console Output רואים בדיוק את הזרימה: Checkout מצליח, Build מתקין את fire מתוך requirements.txt, ו-Test מריץ את האפליקציה פעמיים - Hello World, ואז Hello Brad. שני ההרצות עובדות.</p><ul><li>Checkout - משך את הקוד</li><li>Build - התקין את fire</li><li>Test - Hello World + Hello Brad</li></ul><p class="content-slide__prompt">שאלת מעבר: יש דרך יותר נוחה לראות את כל זה, בלי להתעסק במסך ה-Pipeline הישן?</p>`,
+  },
+
+  {
+    type: 'section',
+    title: 'Blue Ocean',
+    intro: 'אותו Pipeline, ממשק הרבה יותר ברור',
+  },
+
+  {
+    type: 'content',
+    title: 'Open Blue Ocean',
+    html: `<p>לוחצים על <strong>Open Blue Ocean</strong> ורואים את אותו Pipeline בדיוק - Checkout, Build, Test, Deliver - אבל בתצוגה גרפית ונקייה בהרבה מהמסך הרגיל של Jenkins.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'לחיצה על Stage מציגה בדיוק מה קרה',
+    html: `<p>לוחצים על כל Stage בנפרד ורואים בדיוק מה רץ בו - ה-Checkout מ-Version Control, הודעות ה-echo, ולבסוף פקודת ה-pip install שרצה בתוך my_app. באגים ותקלות הרבה יותר קל לאתר כשהתצוגה מפורקת ככה, שלב אחרי שלב.</p>`,
+  },
+
+  {
+    type: 'content',
+    title: 'למה זה שווה לדעת',
+    html: `<p>חלק גדול מהעבודה של DevOps Engineer הוא ניפוי תקלות ב-Pipelines - ולכן ממשק נוח כל כך עוזר. במסך הראשי של Blue Ocean רואים גם מה הפעיל כל ריצה - האם היא נלחצה ידנית, או שהיא רצה אוטומטית דרך SCM. אפשר גם להריץ או להשבית build ישירות משם.</p><ul><li>מזהה מייד מי/מה הפעיל כל build</li><li>אפשר להריץ build ישירות מכאן</li><li>Configure עדיין מחזיר לממשק ה-Jenkins הרגיל</li></ul>`,
+  },
+
+  {
+    type: 'content',
+    title: 'רק שכבת תצוגה',
+    html: `<p>חשוב להבין: Blue Ocean לא משנה שום דבר במנוע של Jenkins - זו רק שכבת תצוגה נוחה יותר מעל אותו Pipeline. לחיצה על Configure עדיין מחזירה אתכם למסך ה-Configure הרגיל של Jenkins. Blue Ocean שווה במיוחד כשמתקדמים ל-Multibranch Pipelines בהמשך הדרך.</p>`,
+  },
+
+  {
+    type: 'section',
+    title: 'סיכום הקורס',
+    intro: 'מה עברנו, מהתקנה ועד Pipeline רץ',
+  },
+
+  {
+    type: 'content',
+    title: 'מה יש לכם עכשיו',
+    html: `<p>עברנו מסלול שלם: התקנת שרת Jenkins Master עם Docker, הגדרת Docker Cloud Agents, עבודה עם Freestyle Projects, ולבסוף בניית Pipeline אמיתי בשפת Groovy עם Jenkinsfile שיושב ב-repository.</p><ul><li>התקנה והגדרה של Jenkins Master</li><li>הקמת Docker Cloud Agents</li><li>ניהול Freestyle Projects</li><li>כתיבת Declarative Pipelines ב-Groovy</li></ul>`,
+  },
+
+  {
+    type: 'content',
+    title: 'מכאן והלאה',
+    html: `<p>עם הבסיס הזה - אתם יכולים להתחיל להריץ עליו כל דבר: בניית קוד, הרצת בדיקות, Ansible Playbooks, סקריפטים ב-Python או ב-Bash, ופריסה לסביבות אמיתיות. Jenkins הוא כלי שגדל יחד אתכם - ככל שתעבדו איתו יותר, תגלו יותר Plugins ויכולות שמתאימות בדיוק לצרכים שלכם.</p>`,
   },
 ]
